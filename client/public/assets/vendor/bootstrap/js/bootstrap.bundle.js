@@ -2038,7 +2038,10 @@
       } else {
         rect = element.getBoundingClientRect();
       }
-    } catch (e) {}
+      // Fix it with copilot, Empty catch Block #1997657
+    } catch (e) {
+        console.error("An error occurred:", e);
+    }
 
     var result = {
       left: rect.left,

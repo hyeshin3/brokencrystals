@@ -1,5 +1,6 @@
 import type { FC } from 'react';
 import { createElement, useEffect, useRef } from 'react';
+import DOMPurify from 'dompurify';
 
 interface InnerHtmlProps {
   html: string;
@@ -26,8 +27,9 @@ export const InnerHtml: FC<InnerHtmlProps> = ({
     }
     isFirstRender.current = Boolean(allowRerender);
 
-    // Create a 'tiny' document and parse the html string
-    const slotHtml = document.createRange().createContextualFragment(html);
+    // Create a 'tiny' document and parse the html string, Fix it with Copilot #1997810
+    const sanitizedHtml = DOMPurify.sanitize(html);
+    const slotHtml = document.createRange().createContextualFragment(sanitizedHtml);
     // Clear the container
     elementRef.current.innerHTML = '';
     // Append the new content

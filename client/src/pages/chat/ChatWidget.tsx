@@ -3,8 +3,17 @@ import { useEffect, useRef, useState } from 'react';
 import { queryChat } from '../../api/httpClient';
 import type { ChatMessage } from '../../interfaces/ChatMessage';
 
-const UnsafeComponent: FC<{ html: string }> = ({ html }) => {
-  return <div dangerouslySetInnerHTML={{ __html: html }} />;
+// Fix somthing... with copilot #1997836 
+const SafeComponent: FC<{ html: string }> = ({ html }) => {
+  const escapeHtml = (unsafe: string) =>
+    unsafe
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  
+  return <div>{escapeHtml(html)}</div>;
 };
 
 export const ChatWidget: FC = () => {
@@ -72,7 +81,7 @@ export const ChatWidget: FC = () => {
       <div className="messages" ref={messagesRef}>
         {chatMessages.map((msg, index) => (
           <div
-            key={index}
+              <SafeComponent html={msg.content} />
             className={`message message-role-${msg.role} ${
               !msg.content ? 'message-error' : ''
             }`}

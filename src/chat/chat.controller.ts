@@ -9,6 +9,8 @@ import { ApiBody, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ChatService } from './chat.service';
 import { API_DESC_CHAT_QUESTION } from './chat.controller.api.desc';
 import { ChatMessage } from './api/ChatMessage';
+import { validate } from 'class-validator';
+import { plainToInstance } from 'class-transformer';
 
 @Controller('/api/chat')
 @ApiTags('Chat controller')
@@ -27,7 +29,16 @@ export class ChatController {
   })
   async query(@Body() messages: ChatMessage[]): Promise<string> {
     try {
-      return await this.chatService.query(messages);
+      // Validate and sanitize the input
+      const validatedMessages = plainToInstance(ChatMessage, messages);
+      const errors = await validate(validatedMessages);
+
+      if (errors.length > 0) {
+        throw new HttpException('Invalid input', HttpStatus.BAD_REQUEST);
+      }
+
+      // Pass the sanitized input to the service
+      return await this.chatService.query(validatedMessages);
     } catch (err) {
       throw new HttpException(
         `Chat API response error: ${err}`,

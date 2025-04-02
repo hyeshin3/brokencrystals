@@ -147,8 +147,8 @@
     TRANSITION_END: 'bsTransitionEnd',
     getUID: function getUID(prefix) {
       do {
-        // eslint-disable-next-line no-bitwise
-        prefix += ~~(Math.random() * MAX_UID); // "~~" acts like a faster Math.floor() here
+        // eslint-disable-next-line no-bitwise // fix with issue message #1997702
+        prefix += crypto.getRandomValues(new Uint32Array(1))[0] % MAX_UID; // Use a cryptographically secure random number generator
       } while (document.getElementById(prefix));
 
       return prefix;
