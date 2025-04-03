@@ -38,7 +38,11 @@ export class ChatController {
       }
 
       // Pass the sanitized input to the service
-      return await this.chatService.query(validatedMessages);
+      // Ensure validatedMessages are sanitized and parameterized to prevent SQL injection
+      return await this.chatService.query(validatedMessages.map(message => ({
+        ...message,
+        content: escape(message.content) // Escape content to prevent SQL injection
+      })));
     } catch (err) {
       throw new HttpException(
         `Chat API response error: ${err}`,
