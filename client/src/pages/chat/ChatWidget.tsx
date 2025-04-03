@@ -3,17 +3,17 @@ import { useEffect, useRef, useState } from 'react';
 import { queryChat } from '../../api/httpClient';
 import type { ChatMessage } from '../../interfaces/ChatMessage';
 
-// Fix somthing... with copilot #1997836 
+// SafeComponent to escape HTML content
 const SafeComponent: FC<{ html: string }> = ({ html }) => {
   const escapeHtml = (unsafe: string) =>
     unsafe
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  
-  return <div>{escapeHtml(html)}</div>;
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+
+  return <div dangerouslySetInnerHTML={{ __html: escapeHtml(html) }} />;
 };
 
 export const ChatWidget: FC = () => {
@@ -56,7 +56,7 @@ export const ChatWidget: FC = () => {
         ...messages,
         {
           role: 'assistant',
-          content: ''
+          content: 'An error occurred while processing your message.'
         }
       ]);
     } finally {
@@ -69,7 +69,7 @@ export const ChatWidget: FC = () => {
   };
 
   const handleKeyDown = async (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === 'Enter') {
+    if (event.key === 'Enter' && userInput.trim()) {
       event.preventDefault();
       setUserInput('');
       await sendMessage();
@@ -81,7 +81,7 @@ export const ChatWidget: FC = () => {
       <div className="messages" ref={messagesRef}>
         {chatMessages.map((msg, index) => (
           <div
-              <SafeComponent html={msg.content} />
+            key={index}
             className={`message message-role-${msg.role} ${
               !msg.content ? 'message-error' : ''
             }`}
@@ -89,14 +89,14 @@ export const ChatWidget: FC = () => {
             {msg.role === 'user' ? (
               msg.content
             ) : msg.content ? (
-              <UnsafeComponent html={msg.content} />
+              <SafeComponent html={msg.content} />
             ) : (
               'Chat API Error'
             )}
           </div>
         ))}
         {loading && (
-          <div className={`message message-role-assistant message-loading`}>
+          <div className="message message-role-assistant message-loading">
             Typing
             <span className="animated-dots">
               <span>.</span>

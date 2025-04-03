@@ -54,14 +54,29 @@ export class TestimonialsService {
     return t;
   }
 
-  async count(query: string): Promise<number> {
+  async count(column: string, value: string): Promise<number> {
     try {
-      this.logger.debug(`Saved new testimonial`);
+      // Validate column name against a whitelist
+      const allowedColumns = ['name', 'title', 'message']; // Add valid column names here
+      if (!allowedColumns.includes(column)) {
+        this.logger.warn(`Invalid column name: ${column}`);
+        throw new Error('Invalid column name');
+      }
 
-      return (await this.em.getConnection().execute(query))[0].count as number;
+      this.logger.info(`Counting testimonials where ${column} = ${value}`);
+
+      // Use parameterized query to prevent SQL injection
+      const result = await this.em
+        .getConnection()
+        .execute(
+          `SELECT COUNT(*) AS count FROM testimonial WHERE ${column} = ?`,
+          [value]
+        );
+
+      return result[0].count as number;
     } catch (err) {
       this.logger.warn(`Failed to execute query. Error: ${err.message}`);
-      return err.message;
+      throw new Error('Failed to count testimonials');
     }
   }
 }
