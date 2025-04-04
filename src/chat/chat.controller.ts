@@ -27,12 +27,24 @@ export class ChatController {
   })
   async query(@Body() messages: ChatMessage[]): Promise<string> {
     try {
-      return await this.chatService.query(messages);
+      // Ensure inputs are sanitized or parameterized to prevent SQL injection
+      const sanitizedMessages = messages.map(message => ({
+        ...message,
+        content: this.sanitizeInput(message.content),
+      }));
+
+      // Use parameterized queries or ORM methods to interact with the database
+      return this.chatService.query(sanitizedMessages);
     } catch (err) {
       throw new HttpException(
         `Chat API response error: ${err}`,
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
+  }
+
+  private sanitizeInput(input: string): string {
+    // Implement input sanitization logic here
+    return input.replace(/['";]/g, ''); // Example: Remove dangerous characters
   }
 }

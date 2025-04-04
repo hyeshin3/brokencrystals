@@ -56,12 +56,24 @@ export class TestimonialsService {
 
   async count(query: string): Promise<number> {
     try {
-      this.logger.debug(`Saved new testimonial`);
+      this.logger.debug(`Counting testimonials with query: ${query}`);
 
-      return (await this.em.getConnection().execute(query))[0].count as number;
+      // Validate and sanitize the query parameter
+      if (typeof query !== 'string' || query.trim().length === 0) {
+        throw new Error('Invalid query parameter');
+      }
+
+      const sanitizedQuery = query.trim().replace(/[%_]/g, ''); // Remove special characters if needed
+
+      // Use parameterized queries to prevent SQL injection
+      const count = await this.testimonialsRepository.count({
+        message: { $ilike: `%${sanitizedQuery}%` },
+      });
+
+      return count;
     } catch (err) {
-      this.logger.warn(`Failed to execute query. Error: ${err.message}`);
-      return err.message;
+      this.logger.warn(`Failed to execute count query. Error: ${err.message}`);
+      throw new Error('Failed to count testimonials'); // Avoid exposing raw error messages
     }
   }
 }
